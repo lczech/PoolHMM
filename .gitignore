@@ -3,3 +3,4 @@ testdata/
 .DS_Store
 .AppleDouble
 .LSOverride
+*.pyc
