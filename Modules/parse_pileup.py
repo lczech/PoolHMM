@@ -43,36 +43,36 @@ class Format:
     #...
 
     def format(self,format,p):
-        ar = []        
+        ar = []
         if format == 'info':
             # pos chr refc nucs qual totcov eucov alleles A T C G N del valid valid_alleles derived_allele allele_code
             ar = [p['ch'], p['pos'], str(p['eucov']), p['allele_code'], p['ancestral_allele'], p['derived_allele'], str(p['removed_alleles']), str(p['unfolded']) ]
         elif format == 'freq':
-	    ancestral = p['ancestral_allele']
+            ancestral = p['ancestral_allele']
             derived = p['derived_allele']
             nucs = p['nucs']
             ar = []
             for n in nucs:
                 code = 0
-		if n.upper() == ancestral:
-		    ar.append(str(code))
+                if n.upper() == ancestral:
+                    ar.append(str(code))
                 elif n.upper() == derived:
                     code = 1
-		    ar.append(str(code))
+                    ar.append(str(code))
                 # ...
             #...
         elif format == 'qual':
-	    ancestral = p['ancestral_allele']
+            ancestral = p['ancestral_allele']
             derived = p['derived_allele']
             qual = p['qual']
-	    nucs = p['nucs']
+            nucs = p['nucs']
             ar = []
-	    i=0
+            i=0
             for q in qual:
-		n = nucs[i]
-		if n.upper() == ancestral or n.upper() == derived:
+                n = nucs[i]
+                if n.upper() == ancestral or n.upper() == derived:
                     ar.append(str(q))
-		i += 1
+                i += 1
             #...
         #...
         return self.sep.join(ar)
@@ -96,35 +96,35 @@ class Pileup_parser_ref:
         #...
     #...
 
-    
+
     def get_pileup_parser(self,line):
         if line == "\n":
             print ("pileup parser empty line provided")
             sys.exit(8)
         #...
-        
+
         #line is splited to get ch, pos, rc, cov, nucs & qual infos
-	try:
-	    line_items=line.split()
+        try:
+            line_items=line.split()
         except ValueError:
             print ("could not parse pileup entry %s" % (line))
             sys.exit(9)
-        #...        
-	
-	if len(line_items) == 6:
-	    (ch, pos, rc, cov, nucs, qual) = line_items
-	else:
-	    print ("wrong number of columns in pileup line: %s" % (line))
-	    sys.exit()
+        #...
+
+        if len(line_items) == 6:
+            (ch, pos, rc, cov, nucs, qual) = line_items
+        else:
+            print ("wrong number of columns in pileup line: %s" % (line))
+            sys.exit()
 
         #nucs is filtered
         #step 1
         s1 = re.findall(r"[-+](\d+)", nucs)
 
         for n in s1:
-	        l1 = ['[-+]',n,'[ACGTNacgtn]{',n, '}']
-	        pattern = r''.join(l1)
-	        nucs = re.sub(pattern, '', nucs)
+                l1 = ['[-+]',n,'[ACGTNacgtn]{',n, '}']
+                pattern = r''.join(l1)
+                nucs = re.sub(pattern, '', nucs)
         #...
 
         #step2
@@ -132,10 +132,10 @@ class Pileup_parser_ref:
 
         #step3
         nucs = re.sub('\$', '', nucs)
-        
+
         #step 4
         nucs = re.sub('\.', rc.upper(), nucs)
-        
+
         #step 5
         nucs = re.sub(',', rc.lower(), nucs)
         #...
@@ -145,8 +145,8 @@ class Pileup_parser_ref:
             print ("Size of sequence does not equal size of quality: %s, %s" % (nucs,line))
             sys.exit(10)
         #...
-        
-        #filter the pileup file by quality 
+
+        #filter the pileup file by quality
         i, ac, tc, cc, gc, nco, dell, co = 0, 0, 0, 0, 0, 0, 0, 0
 
         nucs_filtered = []
@@ -168,7 +168,7 @@ class Pileup_parser_ref:
                     nco += 1
                 elif nc == "*":
                     dell += 1
-                else: 
+                else:
                     print ("Could not parse pileup; Unknown allele : %s in %s" % (a,line))
                     sys.exit(1)
                 #...
@@ -182,17 +182,17 @@ class Pileup_parser_ref:
 
         alar = [{'a':'A', 'c':ac}, {'a':'T', 'c':tc}, {'a':'C', 'c':cc}, {'a':'G', 'c':gc}]
         eucov = ac + tc + cc + gc
-        
+
         if len(nucs_filtered) != len(qual_filtered):
             print ("Error: Length of nucleotides does not agree with lenght of quality string!")
             sys.exit(11)
         #...
-        
+
         if len(nucs_filtered) != eucov:
             print ("Error : Coverage does not agree with length of nucleotides : %d n: %d " % (eucov, len(nucs_filtered)))
             sys.exit(12)
         #...
-        
+
         # pos chr refc nucs qual totcov eucov alleles A T C G N del valid valid_alleles derived_allele allele_code
         entry={
             'pos':pos,
@@ -223,91 +223,91 @@ class Pileup_parser_ref:
         if gc >=  self.minCount:
             alleles += 1
         #...
-        
-	allele_code = "na"
+
+        allele_code = "na"
         if alleles == 1:
             allele_code = "M"
         elif alleles == 2:
             allele_code = "S"
         elif alleles >2:
             allele_code = "T"
-	entry['allele_code'] = allele_code        
-	#..
+        entry['allele_code'] = allele_code
+        #..
 
         valid = 1
         if  entry['del'] >0 or entry['eucov'] < self.minCoverage or entry['eucov'] > self.maxCoverage:
             valid = 0
-	entry["valid"] = valid
+        entry["valid"] = valid
 
-	entry['ancestral_allele']="N"
-	entry['derived_allele']="N"
-	entry['removed_alleles']= 0
-	entry['unfolded']=1
-	entry['refc']=entry['refc'].upper()
+        entry['ancestral_allele']="N"
+        entry['derived_allele']="N"
+        entry['removed_alleles']= 0
+        entry['unfolded']=1
+        entry['refc']=entry['refc'].upper()
 
-	if entry['refc'] == "A":
-	    entry['ancestral_allele']="A"
-	    if ac == 0:
-		entry['removed_alleles']= max(alleles-1,0)
-	    else:
-		entry['removed_alleles']= max(alleles-2,0)
-	    del entry['alleles'][0]
-	    # sort the list alar (remaining alleles) with a bubble sort
-     	    alar = self.sort(alar)
-	    # assigns derived allele
-	    if entry['alleles'][0]['c'] > 0:
-		entry['derived_allele']=entry['alleles'][0]['a']
-	    entry['eucov']=ac+entry['alleles'][0]['c']
-	elif entry['refc'] == "T":
-	    entry['ancestral_allele']="T"
-	    if tc == 0:
-		entry['removed_alleles']= max(alleles-1,0)
-	    else:
-		entry['removed_alleles']= max(alleles-2,0)
-	    del entry['alleles'][1]
-	    # sort the list alar (remaining alleles) with a bubble sort
-     	    alar = self.sort(alar)
-	    # assigns derived allele
-	    if entry['alleles'][0]['c'] > 0:
-		entry['derived_allele']=entry['alleles'][0]['a']
-	    entry['eucov']=tc+entry['alleles'][0]['c']
-	elif entry['refc'] == "C":
-	    entry['ancestral_allele']="C"
-	    if cc == 0:
-		entry['removed_alleles']= max(alleles-1,0)
-	    else:
-		entry['removed_alleles']= max(alleles-2,0)
-	    del entry['alleles'][2]
-	    # sort the list alar (remaining alleles) with a bubble sort
-     	    alar = self.sort(alar)
-	    # assigns derived allele
-	    if entry['alleles'][0]['c'] > 0:
-		entry['derived_allele']=entry['alleles'][0]['a']
-	    entry['eucov']=cc+entry['alleles'][0]['c']
-	elif entry['refc'] == "G":
-	    entry['ancestral_allele']="G"
-	    if gc == 0:
-		entry['removed_alleles']= max(alleles-1,0)
-	    else:
-		entry['removed_alleles']= max(alleles-2,0)
-	    del entry['alleles'][3]
-	    # sort the list alar (remaining alleles) with a bubble sort
-     	    alar = self.sort(alar)
-	    # assigns derived allele
-	    if entry['alleles'][0]['c'] > 0:
-		entry['derived_allele']=entry['alleles'][0]['a']
-	    entry['eucov']=gc+entry['alleles'][0]['c']
-	else: # entry['refc'] == 'N'
-	    entry['unfolded']=0
-	    entry['removed_alleles']= max(alleles-2,0)
-	    if alleles >= 1:
-		# sort the list alar with a bubble sort
-     		alar = self.sort(alar)
-		# assigns alleles			
-		entry['ancestral_allele']=entry['alleles'][0]['a']
-		if alleles >= 2:
-        	    entry['derived_allele']=entry['alleles'][1]['a']
-		    entry['eucov']=entry['alleles'][0]['c']+entry['alleles'][1]['c']
+        if entry['refc'] == "A":
+            entry['ancestral_allele']="A"
+            if ac == 0:
+                entry['removed_alleles']= max(alleles-1,0)
+            else:
+                entry['removed_alleles']= max(alleles-2,0)
+            del entry['alleles'][0]
+            # sort the list alar (remaining alleles) with a bubble sort
+            alar = self.sort(alar)
+            # assigns derived allele
+            if entry['alleles'][0]['c'] > 0:
+                entry['derived_allele']=entry['alleles'][0]['a']
+            entry['eucov']=ac+entry['alleles'][0]['c']
+        elif entry['refc'] == "T":
+            entry['ancestral_allele']="T"
+            if tc == 0:
+                entry['removed_alleles']= max(alleles-1,0)
+            else:
+                entry['removed_alleles']= max(alleles-2,0)
+            del entry['alleles'][1]
+            # sort the list alar (remaining alleles) with a bubble sort
+            alar = self.sort(alar)
+            # assigns derived allele
+            if entry['alleles'][0]['c'] > 0:
+                entry['derived_allele']=entry['alleles'][0]['a']
+            entry['eucov']=tc+entry['alleles'][0]['c']
+        elif entry['refc'] == "C":
+            entry['ancestral_allele']="C"
+            if cc == 0:
+                entry['removed_alleles']= max(alleles-1,0)
+            else:
+                entry['removed_alleles']= max(alleles-2,0)
+            del entry['alleles'][2]
+            # sort the list alar (remaining alleles) with a bubble sort
+            alar = self.sort(alar)
+            # assigns derived allele
+            if entry['alleles'][0]['c'] > 0:
+                entry['derived_allele']=entry['alleles'][0]['a']
+            entry['eucov']=cc+entry['alleles'][0]['c']
+        elif entry['refc'] == "G":
+            entry['ancestral_allele']="G"
+            if gc == 0:
+                entry['removed_alleles']= max(alleles-1,0)
+            else:
+                entry['removed_alleles']= max(alleles-2,0)
+            del entry['alleles'][3]
+            # sort the list alar (remaining alleles) with a bubble sort
+            alar = self.sort(alar)
+            # assigns derived allele
+            if entry['alleles'][0]['c'] > 0:
+                entry['derived_allele']=entry['alleles'][0]['a']
+            entry['eucov']=gc+entry['alleles'][0]['c']
+        else: # entry['refc'] == 'N'
+            entry['unfolded']=0
+            entry['removed_alleles']= max(alleles-2,0)
+            if alleles >= 1:
+                # sort the list alar with a bubble sort
+                alar = self.sort(alar)
+                # assigns alleles
+                entry['ancestral_allele']=entry['alleles'][0]['a']
+                if alleles >= 2:
+                    entry['derived_allele']=entry['alleles'][1]['a']
+                    entry['eucov']=entry['alleles'][0]['c']+entry['alleles'][1]['c']
 
         return entry
     #...
@@ -355,33 +355,33 @@ class Pileup_parser_provided:
             print ("pileup parser empty line provided")
             sys.exit(8)
         #...
-        
+
         #line is splited to get ch, pos, rc, cov, nucs, qual and anc infos
         try:
-	    line_items=line.split()
+            line_items=line.split()
         except ValueError:
             print ("could not parse pileup entry %s" % (line))
             sys.exit(9)
-        #...        
-	
-	if len(line_items) == 7:
-	    (ch, pos, rc, cov, nucs, qual, anc) = line_items
-	    anc=anc.upper()
-	    if not ( anc == 'A' or anc == 'C' or anc == 'G' or anc == 'T' or anc == 'N'):
-	    	print ("invalid ancestral allele in pileup line: %s" % (line))
-	    	sys.exit()
-	else:
-	    print ("wrong number of columns in pileup line: %s" % (line))
-	    sys.exit()
-	    
+        #...
+
+        if len(line_items) == 7:
+            (ch, pos, rc, cov, nucs, qual, anc) = line_items
+            anc=anc.upper()
+            if not ( anc == 'A' or anc == 'C' or anc == 'G' or anc == 'T' or anc == 'N'):
+                    print ("invalid ancestral allele in pileup line: %s" % (line))
+                    sys.exit()
+        else:
+            print ("wrong number of columns in pileup line: %s" % (line))
+            sys.exit()
+
         #nucs is filtered
         #step 1
         s1 = re.findall(r"[-+](\d+)", nucs)
 
         for n in s1:
-	        l1 = ['[-+]',n,'[ACGTNacgtn]{',n, '}']
-	        pattern = r''.join(l1)
-	        nucs = re.sub(pattern, '', nucs)
+                l1 = ['[-+]',n,'[ACGTNacgtn]{',n, '}']
+                pattern = r''.join(l1)
+                nucs = re.sub(pattern, '', nucs)
         #...
 
         #step2
@@ -389,10 +389,10 @@ class Pileup_parser_provided:
 
         #step3
         nucs = re.sub('\$', '', nucs)
-        
+
         #step 4
         nucs = re.sub('\.', rc.upper(), nucs)
-        
+
         #step 5
         nucs = re.sub(',', rc.lower(), nucs)
         #...
@@ -402,8 +402,8 @@ class Pileup_parser_provided:
             print ("Size of sequence does not equal size of quality: %s, %s" % (nucs,line))
             sys.exit(10)
         #...
-        
-        #filter the pileup file by quality 
+
+        #filter the pileup file by quality
         i, ac, tc, cc, gc, nco, dell, co = 0, 0, 0, 0, 0, 0, 0, 0
 
         nucs_filtered = []
@@ -425,7 +425,7 @@ class Pileup_parser_provided:
                     nco += 1
                 elif nc == "*":
                     dell += 1
-                else: 
+                else:
                     print ("Could not parse pileup; Unknown allele : %s in %s" % (a,line))
                     sys.exit(1)
                 #...
@@ -439,17 +439,17 @@ class Pileup_parser_provided:
 
         alar = [{'a':'A', 'c':ac}, {'a':'T', 'c':tc}, {'a':'C', 'c':cc}, {'a':'G', 'c':gc}]
         eucov = ac + tc + cc + gc
-        
+
         if len(nucs_filtered) != len(qual_filtered):
             print ("Error: Length of nucleotides does not agree with lenght of quality string!")
             sys.exit(11)
         #...
-        
+
         if len(nucs_filtered) != eucov:
             print ("Error : Coverage does not agree with length of nucleotides : %d n: %d " % (eucov, len(nucs_filtered)))
             sys.exit(12)
         #...
-        
+
         # pos chr refc nucs qual totcov eucov alleles A T C G N del valid valid_alleles derived_allele allele_code
         entry={
             'pos':pos,
@@ -480,91 +480,91 @@ class Pileup_parser_provided:
         if gc >=  self.minCount:
             alleles += 1
         #...
-        
-	allele_code = "na"
+
+        allele_code = "na"
         if alleles == 1:
             allele_code = "M"
         elif alleles == 2:
             allele_code = "S"
         elif alleles >2:
             allele_code = "T"
-	entry['allele_code'] = allele_code        
-	#..
+        entry['allele_code'] = allele_code
+        #..
 
         valid = 1
         if  entry['del'] >0 or entry['eucov'] < self.minCoverage or entry['eucov'] > self.maxCoverage:
             valid = 0
-	entry["valid"] = valid
+        entry["valid"] = valid
 
-	entry['ancestral_allele']="N"
-	entry['derived_allele']="N"
-	entry['removed_alleles']= 0
-	entry['unfolded']=1
-	entry['refc']=anc # here we use the provided allele instead of the reference one
+        entry['ancestral_allele']="N"
+        entry['derived_allele']="N"
+        entry['removed_alleles']= 0
+        entry['unfolded']=1
+        entry['refc']=anc # here we use the provided allele instead of the reference one
 
-	if entry['refc'] == "A":
-	    entry['ancestral_allele']="A"
-	    if ac == 0:
-		entry['removed_alleles']= max(alleles-1,0)
-	    else:
-		entry['removed_alleles']= max(alleles-2,0)
-	    del entry['alleles'][0]
-	    # sort the list alar (remaining alleles) with a bubble sort
-     	    alar = self.sort(alar)
-	    # assigns derived allele
-	    if entry['alleles'][0]['c'] > 0:
-		entry['derived_allele']=entry['alleles'][0]['a']
-	    entry['eucov']=ac+entry['alleles'][0]['c']
-	elif entry['refc'] == "T":
-	    entry['ancestral_allele']="T"
-	    if tc == 0:
-		entry['removed_alleles']= max(alleles-1,0)
-	    else:
-		entry['removed_alleles']= max(alleles-2,0)
-	    del entry['alleles'][1]
-	    # sort the list alar (remaining alleles) with a bubble sort
-     	    alar = self.sort(alar)
-	    # assigns derived allele
-	    if entry['alleles'][0]['c'] > 0:
-		entry['derived_allele']=entry['alleles'][0]['a']
-	    entry['eucov']=tc+entry['alleles'][0]['c']
-	elif entry['refc'] == "C":
-	    entry['ancestral_allele']="C"
-	    if cc == 0:
-		entry['removed_alleles']= max(alleles-1,0)
-	    else:
-		entry['removed_alleles']= max(alleles-2,0)
-	    del entry['alleles'][2]
-	    # sort the list alar (remaining alleles) with a bubble sort
-     	    alar = self.sort(alar)
-	    # assigns derived allele
-	    if entry['alleles'][0]['c'] > 0:
-		entry['derived_allele']=entry['alleles'][0]['a']
-	    entry['eucov']=cc+entry['alleles'][0]['c']
-	elif entry['refc'] == "G":
-	    entry['ancestral_allele']="G"
-	    if gc == 0:
-		entry['removed_alleles']= max(alleles-1,0)
-	    else:
-		entry['removed_alleles']= max(alleles-2,0)
-	    del entry['alleles'][3]
-	    # sort the list alar (remaining alleles) with a bubble sort
-     	    alar = self.sort(alar)
-	    # assigns derived allele
-	    if entry['alleles'][0]['c'] > 0:
-		entry['derived_allele']=entry['alleles'][0]['a']
-	    entry['eucov']=gc+entry['alleles'][0]['c']
-	else: # entry['refc'] == 'N'
-	    entry['unfolded']=0
-	    entry['removed_alleles']= max(alleles-2,0)
-	    if alleles >= 1:
-		# sort the list alar with a bubble sort
-     		alar = self.sort(alar)
-		# assigns alleles			
-		entry['ancestral_allele']=entry['alleles'][0]['a']
-		if alleles >= 2:
-        	    entry['derived_allele']=entry['alleles'][1]['a']
-		    entry['eucov']=entry['alleles'][0]['c']+entry['alleles'][1]['c']
+        if entry['refc'] == "A":
+            entry['ancestral_allele']="A"
+            if ac == 0:
+                entry['removed_alleles']= max(alleles-1,0)
+            else:
+                entry['removed_alleles']= max(alleles-2,0)
+            del entry['alleles'][0]
+            # sort the list alar (remaining alleles) with a bubble sort
+            alar = self.sort(alar)
+            # assigns derived allele
+            if entry['alleles'][0]['c'] > 0:
+                entry['derived_allele']=entry['alleles'][0]['a']
+            entry['eucov']=ac+entry['alleles'][0]['c']
+        elif entry['refc'] == "T":
+            entry['ancestral_allele']="T"
+            if tc == 0:
+                entry['removed_alleles']= max(alleles-1,0)
+            else:
+                entry['removed_alleles']= max(alleles-2,0)
+            del entry['alleles'][1]
+            # sort the list alar (remaining alleles) with a bubble sort
+            alar = self.sort(alar)
+            # assigns derived allele
+            if entry['alleles'][0]['c'] > 0:
+                entry['derived_allele']=entry['alleles'][0]['a']
+            entry['eucov']=tc+entry['alleles'][0]['c']
+        elif entry['refc'] == "C":
+            entry['ancestral_allele']="C"
+            if cc == 0:
+                entry['removed_alleles']= max(alleles-1,0)
+            else:
+                entry['removed_alleles']= max(alleles-2,0)
+            del entry['alleles'][2]
+            # sort the list alar (remaining alleles) with a bubble sort
+            alar = self.sort(alar)
+            # assigns derived allele
+            if entry['alleles'][0]['c'] > 0:
+                entry['derived_allele']=entry['alleles'][0]['a']
+            entry['eucov']=cc+entry['alleles'][0]['c']
+        elif entry['refc'] == "G":
+            entry['ancestral_allele']="G"
+            if gc == 0:
+                entry['removed_alleles']= max(alleles-1,0)
+            else:
+                entry['removed_alleles']= max(alleles-2,0)
+            del entry['alleles'][3]
+            # sort the list alar (remaining alleles) with a bubble sort
+            alar = self.sort(alar)
+            # assigns derived allele
+            if entry['alleles'][0]['c'] > 0:
+                entry['derived_allele']=entry['alleles'][0]['a']
+            entry['eucov']=gc+entry['alleles'][0]['c']
+        else: # entry['refc'] == 'N'
+            entry['unfolded']=0
+            entry['removed_alleles']= max(alleles-2,0)
+            if alleles >= 1:
+                # sort the list alar with a bubble sort
+                alar = self.sort(alar)
+                # assigns alleles
+                entry['ancestral_allele']=entry['alleles'][0]['a']
+                if alleles >= 2:
+                    entry['derived_allele']=entry['alleles'][1]['a']
+                    entry['eucov']=entry['alleles'][0]['c']+entry['alleles'][1]['c']
 
         return entry
     #...
@@ -612,29 +612,29 @@ class Pileup_parser_folded:
             print ("pileup parser empty line provided")
             sys.exit(8)
         #...
-        
+
         #line is splited to get ch, pos, rc, cov, nucs, qual and anc infos
         try:
-	    line_items=line.split()
+            line_items=line.split()
         except ValueError:
             print ("could not parse pileup entry %s" % (line))
             sys.exit(9)
-        #...        
-	
-	if len(line_items) == 6:
-	    (ch, pos, rc, cov, nucs, qual) = line_items
-	else:
-	    print ("wrong number of columns in pileup line: %s" % (line))
-	    sys.exit()
-	    
+        #...
+
+        if len(line_items) == 6:
+            (ch, pos, rc, cov, nucs, qual) = line_items
+        else:
+            print ("wrong number of columns in pileup line: %s" % (line))
+            sys.exit()
+
         #nucs is filtered
         #step 1
         s1 = re.findall(r"[-+](\d+)", nucs)
 
         for n in s1:
-	        l1 = ['[-+]',n,'[ACGTNacgtn]{',n, '}']
-	        pattern = r''.join(l1)
-	        nucs = re.sub(pattern, '', nucs)
+                l1 = ['[-+]',n,'[ACGTNacgtn]{',n, '}']
+                pattern = r''.join(l1)
+                nucs = re.sub(pattern, '', nucs)
         #...
 
         #step2
@@ -642,10 +642,10 @@ class Pileup_parser_folded:
 
         #step3
         nucs = re.sub('\$', '', nucs)
-        
+
         #step 4
         nucs = re.sub('\.', rc.upper(), nucs)
-        
+
         #step 5
         nucs = re.sub(',', rc.lower(), nucs)
         #...
@@ -655,8 +655,8 @@ class Pileup_parser_folded:
             print ("Size of sequence does not equal size of quality: %s, %s" % (nucs,line))
             sys.exit(10)
         #...
-        
-        #filter the pileup file by quality 
+
+        #filter the pileup file by quality
         i, ac, tc, cc, gc, nco, dell, co = 0, 0, 0, 0, 0, 0, 0, 0
 
         nucs_filtered = []
@@ -678,7 +678,7 @@ class Pileup_parser_folded:
                     nco += 1
                 elif nc == "*":
                     dell += 1
-                else: 
+                else:
                     print ("Could not parse pileup; Unknown allele : %s in %s" % (a,line))
                     sys.exit(1)
                 #...
@@ -692,17 +692,17 @@ class Pileup_parser_folded:
 
         alar = [{'a':'A', 'c':ac}, {'a':'T', 'c':tc}, {'a':'C', 'c':cc}, {'a':'G', 'c':gc}]
         eucov = ac + tc + cc + gc
-        
+
         if len(nucs_filtered) != len(qual_filtered):
             print ("Error: Length of nucleotides does not agree with lenght of quality string!")
             sys.exit(11)
         #...
-        
+
         if len(nucs_filtered) != eucov:
             print ("Error : Coverage does not agree with length of nucleotides : %d n: %d " % (eucov, len(nucs_filtered)))
             sys.exit(12)
         #...
-        
+
         # pos chr refc nucs qual totcov eucov alleles A T C G N del valid valid_alleles derived_allele allele_code
         entry={
             'pos':pos,
@@ -733,36 +733,36 @@ class Pileup_parser_folded:
         if gc >=  self.minCount:
             alleles += 1
         #...
-        
-	allele_code = "na"
+
+        allele_code = "na"
         if alleles == 1:
             allele_code = "M"
         elif alleles == 2:
             allele_code = "S"
         elif alleles >2:
             allele_code = "T"
-	entry['allele_code'] = allele_code        
-	#..
+        entry['allele_code'] = allele_code
+        #..
 
         valid = 1
         if  entry['del'] >0 or entry['eucov'] < self.minCoverage or entry['eucov'] > self.maxCoverage:
             valid = 0
-	entry["valid"] = valid
+        entry["valid"] = valid
 
-	entry['ancestral_allele']="N"
-	entry['derived_allele']="N"
-	entry['removed_alleles']= 0
-	entry['unfolded']=0
+        entry['ancestral_allele']="N"
+        entry['derived_allele']="N"
+        entry['removed_alleles']= 0
+        entry['unfolded']=0
 
         entry['removed_alleles']= max(alleles-2,0)
-	if alleles >= 1:
-	    # sort the list alar with a bubble sort
-     	    alar = self.sort(alar)
-	    # assigns alleles			
-	    entry['ancestral_allele']=entry['alleles'][0]['a']
-	    if alleles >= 2:
-        	entry['derived_allele']=entry['alleles'][1]['a']
-		entry['eucov']=entry['alleles'][0]['c']+entry['alleles'][1]['c']
+        if alleles >= 1:
+            # sort the list alar with a bubble sort
+            alar = self.sort(alar)
+            # assigns alleles
+            entry['ancestral_allele']=entry['alleles'][0]['a']
+            if alleles >= 2:
+                entry['derived_allele']=entry['alleles'][1]['a']
+                entry['eucov']=entry['alleles'][0]['c']+entry['alleles'][1]['c']
 
         return entry
     #...
@@ -787,4 +787,3 @@ class Pileup_parser_folded:
         return l
     #..
 #...
-

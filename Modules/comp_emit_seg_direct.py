@@ -19,7 +19,7 @@ class A:
 
 #function that sort a list of A object by the list_pos[0]
 def quickSort(L):
- 
+
     def trirap(L, g, d):
         pivot = L[(g+d)//2].list_pos[0]
         i = g
@@ -39,7 +39,7 @@ def quickSort(L):
             trirap(L,g,j)
         if i<d:
             trirap(L,i,d)
- 
+
     g=0
     d=len(L)-1
     trirap(L,g,d)
@@ -52,16 +52,16 @@ def procress_emit(qinput,qoutput,lock,pileup_prefix,parser_parameters,n,p_neutra
     minCount = parser_parameters[2]
     minCoverage = parser_parameters[3]
     maxCoverage = parser_parameters[4]
-    
+
     #creation of the parser object
     if ancestral == "provided":
-	parser = pp.Pileup_parser_provided(qualityEncoding,minQual,minCount,minCoverage,maxCoverage)
+        parser = pp.Pileup_parser_provided(qualityEncoding,minQual,minCount,minCoverage,maxCoverage)
     elif ancestral == "unknown":
-	parser = pp.Pileup_parser_folded(qualityEncoding,minQual,minCount,minCoverage,maxCoverage)
+        parser = pp.Pileup_parser_folded(qualityEncoding,minQual,minCount,minCoverage,maxCoverage)
     else:
-	parser = pp.Pileup_parser_ref(qualityEncoding,minQual,minCount,minCoverage,maxCoverage)
+        parser = pp.Pileup_parser_ref(qualityEncoding,minQual,minCount,minCoverage,maxCoverage)
     f = pp.Format()
-    
+
     pileup = pp.openPileup(pileup_prefix, 'r')
     for item in iter(qinput.get,'STOP'):
         l = []
@@ -71,26 +71,26 @@ def procress_emit(qinput,qoutput,lock,pileup_prefix,parser_parameters,n,p_neutra
         #...
         p = A()
         for l_item in l:
-            parsed = parser.get_pileup_parser(l_item)      
+            parsed = parser.get_pileup_parser(l_item)
             if parsed['valid'] == 1:
                 info = f.format('info',parsed)
-                if info.split()[5] != "N":                
+                if info.split()[5] != "N":
                     unfolded = int(info.split()[7])
                     votemp = np.fromstring(f.format('freq',parsed), dtype=int, sep=' ')
                     SE = np.fromstring(f.format('qual',parsed), dtype=float, sep=' ')
                     SEtemp = 10**(-SE/10)
                     pseg = prob_cond_true_freq(n,votemp,SEtemp,unfolded)
-		    votemp = np.zeros(len(votemp))
+                    votemp = np.zeros(len(votemp))
                     p0 = prob_cond_true_freq(n,votemp,SEtemp,unfolded)
-		    E = comp_emit_BF_3_SEG(n,pseg,p0,p_neutral,f_sel1,f_sel2,unfolded)
-		    if E[0] > 0 and E[1] > 0 and E[2] > 0:                  	
-                    	p.list_chro.append(info.split()[0])
-                    	p.list_pos.append(int(info.split()[1]))
-                    	p.list_E.append(E)
+                    E = comp_emit_BF_3_SEG(n,pseg,p0,p_neutral,f_sel1,f_sel2,unfolded)
+                    if E[0] > 0 and E[1] > 0 and E[2] > 0:
+                            p.list_chro.append(info.split()[0])
+                            p.list_pos.append(int(info.split()[1]))
+                            p.list_E.append(E)
                 #...
             #...
         #...
-        if len(p.list_E) != 0: #in case that all the lines parsed are not valid 
+        if len(p.list_E) != 0: #in case that all the lines parsed are not valid
             qoutput.put(p)
         #...
     #...
@@ -98,7 +98,7 @@ def procress_emit(qinput,qoutput,lock,pileup_prefix,parser_parameters,n,p_neutra
 #...
 
 def comp_emit_seg_direct(parser_parameters,region,nProcess,n,prefix,p_neutral,pileup_prefix,ancestral):
-    
+
     emit = open(prefix + '.segemit','w')
     lock = Lock()
     task_queue = Queue()
@@ -165,7 +165,7 @@ def comp_emit_seg_direct(parser_parameters,region,nProcess,n,prefix,p_neutral,pi
             split_pileup = pileup_line.split()
             if len(split_pileup) == 0:
                 break
-            #... 
+            #...
         #...
     #...
     else:
@@ -187,24 +187,24 @@ def comp_emit_seg_direct(parser_parameters,region,nProcess,n,prefix,p_neutral,pi
     print ('f_sel1 loaded')
     f_sel2 = proba_nielsen(n,p_neutral,coeff2)
     print ('f_sel2 loaded')
-    
+
     for i in range(nProcess):
         p = Process(target=procress_emit,args=(task_queue, done_queue,lock,pileup_prefix,parser_parameters,n,p_neutral,f_sel1,f_sel2,ancestral)).start()
     #...
-    
+
     #for each offset expept the last one
     for offset in offset_table[:-1]:
         task_queue.put([offset,block])
     #...
-    
-    #management of the last line_block 
+
+    #management of the last line_block
     if nbLine % block != 0:
         task_queue.put([offset_table[-1],nbLine % block])
     #...
     del offset_table
     del f_sel1
     del f_sel2
-    
+
     for i in range(nProcess):
         task_queue.put('STOP')
     #...

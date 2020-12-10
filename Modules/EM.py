@@ -18,14 +18,14 @@ def EM(n,nb_sites,p,nb_dep,maxiter,maxerr,theta,ancestral):
         v_old[1:]= theta / (np.arange(1,n+1))
         v_old[0] = 1 - sum(v_old[1:])
 
-	if ancestral == 'unknown':
-	    v_old = (v_old + v_old[::-1])/2
+        if ancestral == 'unknown':
+            v_old = (v_old + v_old[::-1])/2
 
         lik_old2= -nb_sites*10000
         iter=0
         err=1000
         #iterations
-        while ((err>maxerr) and (iter < maxiter)): 
+        while ((err>maxerr) and (iter < maxiter)):
             lik_old = 0
             v_new = np.zeros(n+1)
             for i in range(nb_sites):
@@ -33,8 +33,8 @@ def EM(n,nb_sites,p,nb_dep,maxiter,maxerr,theta,ancestral):
                 sumAux_old = np.sum(aux_old)
                 lik_old +=  np.log(sumAux_old)
                 v_new += (aux_old/sumAux_old)
-              #...
-            v_new /= nb_sites          
+            #...
+            v_new /= nb_sites
             err = lik_old - lik_old2
             iter += 1
             v_old = v_new
@@ -49,4 +49,3 @@ def EM(n,nb_sites,p,nb_dep,maxiter,maxerr,theta,ancestral):
     v_new = v_best
     return v_new
 #...
-

@@ -11,18 +11,18 @@ def proba_nielsen(n,p_neutral,coeff):
 
     # number of lineages escaping the sweep
 
-    p_e = np.zeros(n+1) 
+    p_e = np.zeros(n+1)
 
     for k in range(n+1):
         p_e[k] = np.exp(log_bino(n,k)) * p**k * (1-p)**(n-k)
-    #...  
+    #...
 
     # probabilities of observing j mutants in a neutral sample of size h
     mat_p = np.zeros((n+1,n+1))
     for h in range(1,n+1):
         #cpt=h
         for j in range(h+1):
-            for i in range(j,n-h+j+1):          
+            for i in range(j,n-h+j+1):
                 aux = log_bino(i,j) + log_bino(n-i,h-j) - log_bino(n,h)
                 mat_p[j,h] +=  p_neutral[i] * np.exp(aux)
             #...
@@ -41,4 +41,3 @@ def proba_nielsen(n,p_neutral,coeff):
         #...
     #...
     return p_sel
-

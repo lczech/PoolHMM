@@ -1,7 +1,7 @@
 import numpy as np
 
 def hmm_posterior(T,E,mu0):
-    # pos: vector of genomic positions (in bp), nb_sites*1   
+    # pos: vector of genomic positions (in bp), nb_sites*1
     # T: per site transition matrix of the hidden Markov process, size nb_state*nb_state
     # E: emission matrix, size nb_states*nb_sites
     # mu0: initial distribution (one should take the stationary one)
@@ -12,12 +12,12 @@ def hmm_posterior(T,E,mu0):
     Teff = T
     E = E.T
     alpha = np.zeros((nb_states,nb_sites))
-    beta = np.ones((nb_states,nb_sites))  
+    beta = np.ones((nb_states,nb_sites))
     # algo forward
     for j in  range(nb_states):
         alpha[j,0] = E[j+1,0] * mu0[j]
     #...
-    
+
     alpha[:,0] /=  np.sum(alpha[:, 0])
     for i in range(1, nb_sites):
         d= int(E[0,i]-E[0,i-1])
@@ -42,7 +42,7 @@ def hmm_posterior(T,E,mu0):
         else:
             Teff = np.identity(nb_states)
             #...
-        for j in range(0,nb_states):                             
+        for j in range(0,nb_states):
             beta[j,i] = np.sum(E[1:,i+1] * Teff[j].T * beta[:,i+1])
             #...
         beta[:,i] /= np.sum(beta[:,i])

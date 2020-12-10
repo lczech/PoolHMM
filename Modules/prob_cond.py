@@ -17,16 +17,16 @@ def process_probCond(qinput,qoutput,lock,pileup_prefix,parser_parameters,ratio,n
     minCount = parser_parameters[2]
     minCoverage = parser_parameters[3]
     maxCoverage = parser_parameters[4]
-    
+
     #creation of the parser object
     if ancestral == "provided":
-	parser = pp.Pileup_parser_provided(qualityEncoding,minQual,minCount,minCoverage,maxCoverage)
+        parser = pp.Pileup_parser_provided(qualityEncoding,minQual,minCount,minCoverage,maxCoverage)
     elif ancestral == "unknown":
-	parser = pp.Pileup_parser_folded(qualityEncoding,minQual,minCount,minCoverage,maxCoverage)
+        parser = pp.Pileup_parser_folded(qualityEncoding,minQual,minCount,minCoverage,maxCoverage)
     else:
-	parser = pp.Pileup_parser_ref(qualityEncoding,minQual,minCount,minCoverage,maxCoverage)
+        parser = pp.Pileup_parser_ref(qualityEncoding,minQual,minCount,minCoverage,maxCoverage)
     f = pp.Format()
-    
+
     for item in iter(qinput.get,'STOP'):
         l = []
         lock.acquire()
@@ -36,25 +36,25 @@ def process_probCond(qinput,qoutput,lock,pileup_prefix,parser_parameters,ratio,n
         #...
         lock.release()
         p_list = []
-        for l_item in l: 
+        for l_item in l:
             parsed = parser.get_pileup_parser(l_item)
             if parsed['valid'] == 1:
                 if bernoulli.rvs(1./ratio) == 1:
                     info = f.format('info',parsed)
                     unfolded = int(info.split()[7])
                     SE = np.fromstring(f.format('qual',parsed), dtype=float, sep=' ')
-		    #print SE
+                    #print SE
                     votemp = np.fromstring(f.format('freq',parsed), dtype=int, sep=' ')
                     SEtemp = 10**(-SE/10)
                     p = prob_cond_true_freq(n,votemp,SEtemp,unfolded);
-		    if np.sum(p) > 0:
-                    	p_list.append(p)
+                    if np.sum(p) > 0:
+                            p_list.append(p)
                 #....
             #...
         #...
-        if len(p_list) != 0: #in case that all the lines parsed are not valid 
+        if len(p_list) != 0: #in case that all the lines parsed are not valid
             qoutput.put(p_list)
-            
+
         #...
     #...
     pileup.close()
@@ -66,7 +66,7 @@ def prob_cond(parser_parameters,region,theta,nProcess,ratio,n,prefix,pileup_pref
     done_queue = Queue()
     block = 10000
     pileup = pp.openPileup(pileup_prefix, 'rb')
-   
+
     if region:
         chro = region[0]
         start = region[1]
@@ -124,7 +124,7 @@ def prob_cond(parser_parameters,region,theta,nProcess,ratio,n,prefix,pileup_pref
             split_pileup = pileup_line.split()
             if len(split_pileup) == 0:
                 break
-            #... 
+            #...
         #...
     #...
     else:
@@ -140,36 +140,36 @@ def prob_cond(parser_parameters,region,theta,nProcess,ratio,n,prefix,pileup_pref
         #...
     #...
     pileup.close()
-    
+
     #for each offset except the last one
     for offset in offset_table[:-1]:
         task_queue.put([offset,block])
     #...
-    
-    #management of the last line_block 
+
+    #management of the last line_block
     if nbLine % block != 0:
         task_queue.put([offset_table[-1],nbLine % block])
     #...
-    
+
     del offset_table
-    
+
     for i in range(nProcess):
         task_queue.put('STOP')
     #...
-    
+
     for i in range(nProcess):
-        p = Process(target=process_probCond,args=(task_queue,done_queue,lock,pileup_prefix,parser_parameters,ratio,n,ancestral)).start()  
+        p = Process(target=process_probCond,args=(task_queue,done_queue,lock,pileup_prefix,parser_parameters,ratio,n,ancestral)).start()
     #...
-    
+
     while task_queue.qsize() != 0:
         pass
     #...
-    
+
     p_neutral = []
     for i in range(done_queue.qsize()):
         p_neutral += done_queue.get()
     #...
-    
+
     p_neutral = np.array(p_neutral)
     p_neutral = comp_spectrum(p_neutral,n,theta,ancestral)
     np.savetxt(prefix + '.spectrum', np.array([p_neutral]),delimiter=' ', fmt='%.6e')

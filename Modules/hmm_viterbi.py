@@ -1,7 +1,7 @@
 import numpy as np
 
 def hmm_viterbi(T,E,mu0):
-    # pos: vector of genomic positions (in bp), nb_sites*1   
+    # pos: vector of genomic positions (in bp), nb_sites*1
     # T: per site transition matrix of the hidden Markov process, size nb_state*nb_state
     # E: emission matrix, size nb_states*nb_sites
     # mu0: initial distribution (one should take the stationary one)
@@ -45,4 +45,3 @@ def hmm_viterbi(T,E,mu0):
     #...'''
     return pred
 #...
-
